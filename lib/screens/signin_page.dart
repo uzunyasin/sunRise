@@ -11,6 +11,7 @@ import 'package:sunset_app/utils/navigate.dart';
 import 'package:sunset_app/widgets/custom_appbar.dart';
 import 'package:sunset_app/widgets/custom_button.dart';
 import 'package:sunset_app/widgets/custom_textfield.dart';
+import 'package:sunset_app/widgets/errorAlert.dart';
 import 'package:sunset_app/widgets/field_title_widget.dart';
 
 class LoginPage extends StatefulWidget {

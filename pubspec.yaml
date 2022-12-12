@@ -37,6 +37,7 @@ dependencies:
   rounded_loading_button: ^2.1.0
   firebase_storage: ^11.0.7
   cloud_firestore: ^4.2.0
+  fluttertoast: ^8.0.9
 
 
 

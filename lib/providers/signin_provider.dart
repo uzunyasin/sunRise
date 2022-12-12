@@ -1,16 +1,18 @@
 import 'dart:developer';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sunset_app/constants/constants.dart';
+import 'package:sunset_app/screens/login_signup_view.dart';
 import 'dart:math' as math;
 
 import 'package:sunset_app/services/app_services.dart';
-
-
+import 'package:sunset_app/utils/navigate.dart';
 
 class SignInProvider extends ChangeNotifier {
   SignInProvider() {
@@ -18,8 +20,6 @@ class SignInProvider extends ChangeNotifier {
   }
 
   ProfilePicPref profilePicPreferences = ProfilePicPref();
-
-
 
   final dio = Dio();
 
@@ -38,6 +38,18 @@ class SignInProvider extends ChangeNotifier {
   String? _name;
 
   String? get name => _name;
+
+  String? _surname;
+
+  String? get surname => _surname;
+
+  String? _gender;
+
+  String? get gender => _gender;
+
+  String? _age;
+
+  String? get age => _age;
 
   String? _username;
 
@@ -71,24 +83,25 @@ class SignInProvider extends ChangeNotifier {
 
   static const _chars = 'AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz';
   final math.Random _char = math.Random();
+
   String usernameGen(int length) => String.fromCharCodes(Iterable.generate(
       length, (_) => _chars.codeUnitAt(_char.nextInt(_chars.length))));
 
   static const _nums = '0123456789';
   final math.Random _num = math.Random();
-  int passwordGen(int length) => int.parse(String.fromCharCodes(Iterable.generate(
-      length, (_) => _nums.codeUnitAt(_num.nextInt(_nums.length)))));
+
+  int passwordGen(int length) =>
+      int.parse(String.fromCharCodes(Iterable.generate(
+          length, (_) => _nums.codeUnitAt(_num.nextInt(_nums.length)))));
 
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
   var scaffoldKey = GlobalKey<ScaffoldState>();
 
-  Future signInWithEmailPassword(
-      String email, String password) async {
+  Future signInWithEmailPassword(String email, String password) async {
     try {
-      final credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
-          email: email,
-          password: password
-      );
+      final credential = await FirebaseAuth.instance
+          .signInWithEmailAndPassword(email: email, password: password);
+      _uid = credential.user!.uid;
       return true;
     } on FirebaseAuthException catch (e) {
       _errorCode = e.code;
@@ -96,18 +109,26 @@ class SignInProvider extends ChangeNotifier {
     }
   }
 
-  Future userSignOut() async {
-    dio.options.headers["Accept"] = "application/json";
-   // dio.options.headers["Authorization"] = "Bearer " + token!;
-    var response = await dio.post("${Constants.baseUrl}auth/logout");
-    if(response.statusCode == 200) {
-      if(_signInProvider == "google") {
-        await _firebaseAuth.signOut();
-      }
-      else if(_signInProvider == "facebook") {
-        await _firebaseAuth.signOut();
-      }
+  Future getUserDetails(BuildContext context) async {
+    var collection = FirebaseFirestore.instance.collection('users');
+    var docSnapshot = await collection.doc(uid).get();
+    Map<String, dynamic>? data;
+    if (docSnapshot.exists) {
+      data = docSnapshot.data();
     }
+    _name = data!["name"];
+    _surname = data["surname"];
+    _age = data["age"];
+    _gender = data["gender"];
+    return data;
+  }
+
+  Future userSignOut(BuildContext context) async {
+    await FirebaseAuth.instance.signOut().then((value) {
+      afterUserSignOut().then((value) {
+        nextScreenCloseOthers(context, LoginSignupPage());
+      });
+    });
   }
 
   Future afterUserSignOut() async {
@@ -116,45 +137,35 @@ class SignInProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-
-  Future signUpWithEmailPassword(
-      String email, String name, String password, String surname, String age, String gender) async {
+  Future signUpWithEmailPassword(String email, String name, String password,
+      String surname, String age, String gender) async {
     try {
-      final credential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+      final credential =
+          await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
+      _uid = credential.user!.uid;
+      _name = name;
+      _surname = surname;
+      _age = age;
+      _gender = gender;
       Map<String, dynamic> data = {
-        "name" : name,
-        "surname" : surname,
-        "age" : age,
-        "gender" : gender,
-        "registerDate" : DateTime.now()
+        "name": name,
+        "surname": surname,
+        "age": age,
+        "gender": gender,
+        "registerDate": DateTime.now()
       };
       await addUser(credential.user!.uid, data);
-      return true;
       signInWithEmailPassword(email, password);
+      return true;
     } on FirebaseAuthException catch (e) {
       _errorCode = e.code;
       return false;
     } catch (e) {
       print(e);
     }
-  }
-
-  Future getUserDetails(String tok) async {
-    dio.options.headers["Accept"] = "application/json";
-    dio.options.headers["Authorization"] = "Bearer " + tok;
-
-    var response = await dio.get(Constants.baseUrl + "auth/userdetails");
-    log(response.data.toString());
-
-    _name = response.data["data"]["name"];
-    _email = response.data["data"]["email"];
-    _username = response.data["data"]["username"];
-    _userExists = response.data["data"]["onboarded"];
-    _userType = response.data["data"]["type"];
-
   }
 
   Future<int?> checkUserExists() async {
@@ -164,7 +175,8 @@ class SignInProvider extends ChangeNotifier {
     // dio.options.headers["Authorization"] = "Bearer " + token!;
     log("userexists " + _userExists.toString());
 
-    return await Future.delayed(const Duration(milliseconds: 200), () => _userExists);
+    return await Future.delayed(
+        const Duration(milliseconds: 200), () => _userExists);
   }
 
   Future setSignIn() async {
@@ -180,12 +192,11 @@ class SignInProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-
   Future saveDataToSP() async {
     final SharedPreferences sp = await SharedPreferences.getInstance();
     await sp.setString('name', _name ?? "");
     await sp.setString('email', _email ?? "");
-    await sp.setString('uid', _uid ?? "" );
+    await sp.setString('uid', _uid ?? "");
     await sp.setString('sign_in_provider', _signInProvider ?? "");
     await sp.setString('username', _username ?? "");
   }
@@ -208,7 +219,7 @@ class SignInProvider extends ChangeNotifier {
 
   Future clearAllData() async {
     final SharedPreferences sp = await SharedPreferences.getInstance();
-    sp.clear();
+    await sp.clear();
   }
 }
 

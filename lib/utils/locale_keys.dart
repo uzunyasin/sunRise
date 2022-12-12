@@ -30,7 +30,14 @@ abstract class LocaleKeys{
   static const sunrise = 'Gün Doğumu';
   static const sunset = 'Gün Batımı';
   static const location = 'Konumunuz :';
-  static const hint = 'Mevcut Konumunuz İçin Güneş Doğuş ve Batış Bilgileri: ';
+  static const latitude = 'Enlem :';
+  static const longitude = 'Boylam :';
+  static const hint = 'Konumunuz İçin Güneş Doğuş ve Batış Bilgileri: ';
+  static const save = 'Kaydet';
+  static const location_saved = 'Kaydedildi';
+  static const search = 'Sorgula';
+  static const named = 'adlı';
+  static const logout = 'Çıkış Yap';
 
 
 

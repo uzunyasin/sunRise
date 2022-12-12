@@ -11,6 +11,7 @@ import 'package:sunset_app/providers/signin_provider.dart';
 import 'package:sunset_app/screens/main_page.dart';
 import 'package:sunset_app/services/app_services.dart';
 import 'package:sunset_app/utils/locale_keys.dart';
+import 'package:sunset_app/widgets/errorAlert.dart';
 import '../utils/navigate.dart';
 
 import '../../../widgets/custom_button.dart';
@@ -45,8 +46,8 @@ class _SignupMailPageState extends State<SignupMailPage> {
   var scaffoldKey = GlobalKey<ScaffoldState>();
 
   List<String> genderList = [
-    'Male',
-    'Female',
+    'Erkek',
+    'Kadın',
     // 'School Manager'
   ];
 
@@ -198,8 +199,8 @@ class _SignupMailPageState extends State<SignupMailPage> {
                     context.emptyLowWidget,
                     RadioListTile(
                       activeColor: context.colors.orangeColor,
-                      title: Text("Male"),
-                      value: "Male",
+                      title: Text("Erkek"),
+                      value: "Erkek",
                       groupValue: gender,
                       onChanged: (value){
                         setState(() {
@@ -209,8 +210,8 @@ class _SignupMailPageState extends State<SignupMailPage> {
                     ),
                     RadioListTile(
                       activeColor: context.colors.orangeColor,
-                      title: Text("Female"),
-                      value: "Female",
+                      title: Text("Kadın"),
+                      value: "Kadın",
                       groupValue: gender,
                       onChanged: (value){
                         setState(() {

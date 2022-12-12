@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
+import 'package:sunset_app/providers/signin_provider.dart';
 import 'package:sunset_app/screens/explore_page.dart';
 import 'package:sunset_app/screens/profile_page.dart';
 import 'package:sunset_app/screens/saved_locs.dart';
@@ -44,6 +46,13 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  @override
+  void initState() {
+    final SignInProvider sp =
+    Provider.of<SignInProvider>(context, listen: false);
+    sp.getUserDetails(context);
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
